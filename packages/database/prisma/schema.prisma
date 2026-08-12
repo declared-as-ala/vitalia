@@ -1,0 +1,360 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  AGENT
+  CLIENT
+}
+
+enum ClientStatus {
+  LEAD
+  ACTIVE
+  APPLIED
+  ACCEPTED
+  VISA_PENDING
+  COMPLETED
+  ARCHIVED
+}
+
+enum DossierStage {
+  DOSSIER_CREATION
+  DOCUMENT_TRANSLATION
+  PRE_ENROLLMENT
+  UNIVERSITY_APPLICATION
+  ADMISSION_GRANTED
+  VISA_PROCEDURE
+  ENROLLED
+}
+
+enum DocumentCategory {
+  PASSPORT
+  DIPLOMA
+  TRANSCRIPT
+  LANGUAGE_CERT
+  CV
+  MOTIVATION_LETTER
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+}
+
+enum DegreeLevel {
+  BACHELOR
+  MASTER
+  PHD
+}
+
+enum ProgramStatus {
+  OPEN
+  CLOSED
+  OPENING_SOON
+  CLOSING_SOON
+  UNKNOWN
+}
+
+enum ReviewStatus {
+  PENDING
+  PUBLISHED
+  REJECTED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         Role     @default(CLIENT)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  clientProfile    ClientProfile?
+  assignedClients  ClientProfile[] @relation("AssignedAgent")
+  assignedDossiers Dossier[]       @relation("AgentDossiers")
+  createdReceipts  Receipt[]       @relation("CreatedReceipts")
+  createdPayments  Payment[]       @relation("CreatedPayments")
+  assignedTasks    Task[]          @relation("AssignedTasks")
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  notifications    Notification[]
+  activityLogs     ActivityLog[]
+}
+
+model ClientProfile {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String       @unique @db.ObjectId
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientNumber       String       @unique
+  phone              String
+  nationality        String
+  countryOfResidence String
+  profilePhoto       String?
+  status             ClientStatus @default(ACTIVE)
+
+  assignedAgentId String? @db.ObjectId
+  assignedAgent   User?   @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+
+  dossiers     Dossier[]
+  documents    Document[]
+  appointments Appointment[]
+  payments     Payment[]
+  receipts     Receipt[]
+  reviews      Review[]
+  tasks        Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Dossier {
+  id                    String       @id @default(auto()) @map("_id") @db.ObjectId
+  clientId              String       @db.ObjectId
+  client                ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  studyDomain           String
+  desiredDegree         DegreeLevel
+  academicYear          String
+  preferredCities       String[]
+  preferredUniversities String[]
+  stage                 DossierStage @default(DOSSIER_CREATION)
+  notes                 String?
+
+  assignedAgentId String? @db.ObjectId
+  assignedAgent   User?   @relation("AgentDossiers", fields: [assignedAgentId], references: [id])
+
+  documents Document[]
+  tasks     Task[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id         String           @id @default(auto()) @map("_id") @db.ObjectId
+  clientId   String           @db.ObjectId
+  client     ClientProfile    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  dossierId  String?          @db.ObjectId
+  dossier    Dossier?         @relation(fields: [dossierId], references: [id])
+  name       String
+  category   DocumentCategory
+  fileKey    String
+  mimeType   String
+  fileSize   Int
+  uploadedAt DateTime         @default(now())
+}
+
+model Appointment {
+  id         String        @id @default(auto()) @map("_id") @db.ObjectId
+  clientId   String        @db.ObjectId
+  client     ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  agentId    String?       @db.ObjectId
+  title      String
+  date       DateTime
+  type       String
+  notes      String?
+  isCanceled Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+}
+
+model Task {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  description  String?
+  clientId     String?       @db.ObjectId
+  client       ClientProfile? @relation(fields: [clientId], references: [id])
+  dossierId    String?       @db.ObjectId
+  dossier      Dossier?      @relation(fields: [dossierId], references: [id])
+  assignedToId String?       @db.ObjectId
+  assignedTo   User?         @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  dueDate      DateTime?
+  priority     TaskPriority  @default(MEDIUM)
+  status       TaskStatus    @default(TODO)
+  createdAt    DateTime      @default(now())
+}
+
+model Payment {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  clientId      String        @db.ObjectId
+  client        ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      String        @default("EUR")
+  paymentMethod PaymentMethod
+  paymentDate   DateTime      @default(now())
+  notes         String?
+
+  createdById String @db.ObjectId
+  createdBy   User   @relation("CreatedPayments", fields: [createdById], references: [id])
+
+  receipt   Receipt?
+  createdAt DateTime @default(now())
+}
+
+model Receipt {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  receiptNumber   String        @unique
+  clientId        String        @db.ObjectId
+  client          ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  paymentId       String?       @unique @db.ObjectId
+  payment         Payment?      @relation(fields: [paymentId], references: [id])
+  amount          Float
+  currency        String        @default("EUR")
+  paymentMethod   PaymentMethod
+  paymentDate     DateTime
+  legalDisclaimer String        @default("Le montant versé est non remboursable, quels que soient les résultats ou décisions des organismes concernés.")
+
+  createdById String @db.ObjectId
+  createdBy   User   @relation("CreatedReceipts", fields: [createdById], references: [id])
+
+  pdfFileKey String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model University {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  slug      String    @unique
+  city      String
+  region    String?
+  country   String    @default("IT")
+  website   String
+  logoUrl   String?
+  programs  Program[]
+  createdAt DateTime  @default(now())
+}
+
+model Program {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  universityId String          @db.ObjectId
+  university   University      @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  name         String
+  slug         String
+  degreeLevel  DegreeLevel
+  studyDomain  String
+  language     String          @default("English")
+  intakes      ProgramIntake[]
+  createdAt    DateTime        @default(now())
+}
+
+model ProgramIntake {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  programId      String        @db.ObjectId
+  program        Program       @relation(fields: [programId], references: [id], onDelete: Cascade)
+  academicYear   String
+  openingDate    DateTime?
+  closingDate    DateTime?
+  applicationFee Float?
+  tuitionFee     Float?
+  status         ProgramStatus @default(UNKNOWN)
+  sourceUrl      String
+  scrapedAt      DateTime      @default(now())
+  verifiedAt     DateTime      @default(now())
+}
+
+model ScrapeSource {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  baseUrl       String
+  adapterKey    String
+  isActive      Boolean     @default(true)
+  lastScrapedAt DateTime?
+  jobs          ScrapeJob[]
+  createdAt     DateTime    @default(now())
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+model ScrapeJob {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  sourceId       String       @db.ObjectId
+  source         ScrapeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  status         JobStatus    @default(QUEUED)
+  recordsFound   Int          @default(0)
+  recordsUpdated Int          @default(0)
+  errorLog       String?
+  startedAt      DateTime?
+  finishedAt     DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+model Review {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  clientId    String?       @db.ObjectId
+  client      ClientProfile? @relation(fields: [clientId], references: [id])
+  authorName  String
+  authorPhoto String?
+  rating      Int           @default(5)
+  title       String
+  comment     String
+  status      ReviewStatus  @default(PENDING)
+  isFeatured  Boolean       @default(false)
+  approvedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Message {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId      String   @db.ObjectId
+  sender        User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId    String   @db.ObjectId
+  receiver      User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content       String
+  attachmentUrl String?
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  type      String
+  targetUrl String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  actorId   String   @db.ObjectId
+  actor     User     @relation(fields: [actorId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
