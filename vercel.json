@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm build",
+  "version": 2,
+  "buildCommand": "pnpm --filter @viaitalia/web build",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "pnpm install",
   "framework": "nextjs"
 }

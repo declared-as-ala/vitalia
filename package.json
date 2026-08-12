@@ -4,13 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"pnpm --filter @viaitalia/api dev\" \"pnpm --filter @viaitalia/web dev\" \"pnpm --filter @viaitalia/worker dev\"",
-    "build": "pnpm --filter \"@viaitalia/*\" build",
+    "build": "pnpm --filter @viaitalia/web build",
     "test": "pnpm --filter \"@viaitalia/*\" test",
     "lint": "pnpm --filter \"@viaitalia/*\" lint",
     "db:generate": "pnpm --filter @viaitalia/database db:generate",
     "db:push": "pnpm --filter @viaitalia/database db:push",
-    "db:seed": "pnpm --filter @viaitalia/database db:seed",
-    "db:studio": "pnpm --filter @viaitalia/database db:studio"
+    "db:seed": "pnpm --filter @viaitalia/database db:seed"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
