@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"pnpm --filter @viaitalia/api dev\" \"pnpm --filter @viaitalia/web dev\" \"pnpm --filter @viaitalia/worker dev\"",
-    "build": "pnpm --filter @viaitalia/web build",
+    "build": "pnpm --filter @viaitalia/database db:generate && pnpm --filter @viaitalia/web build",
     "test": "pnpm --filter \"@viaitalia/*\" test",
     "lint": "pnpm --filter \"@viaitalia/*\" lint",
     "db:generate": "pnpm --filter @viaitalia/database db:generate",
