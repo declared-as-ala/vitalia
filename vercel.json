@@ -1,6 +1,5 @@
 {
   "version": 2,
   "buildCommand": "pnpm --filter @viaitalia/web build",
-  "outputDirectory": "apps/web/.next",
-  "framework": "nextjs"
+  "outputDirectory": "apps/web/.next"
 }
