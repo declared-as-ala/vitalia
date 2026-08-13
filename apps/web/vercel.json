@@ -1,7 +1,4 @@
 {
-  "version": 2,
-  "installCommand": "pnpm install --no-frozen-lockfile",
   "buildCommand": "pnpm --filter @viaitalia/database db:generate && pnpm build",
-  "outputDirectory": ".next",
-  "ignoreCommand": "exit 1"
+  "installCommand": "pnpm install --no-frozen-lockfile"
 }
