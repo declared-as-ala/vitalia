@@ -2,6 +2,11 @@
 
 > Production platform for study & university application management in Italy.
 
+![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-success?style=flat&logo=vercel)
+![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas%20Cloud-green?style=flat&logo=mongodb)
+![Prisma ORM](https://img.shields.io/badge/Prisma-ORM-blue?style=flat&logo=prisma)
+![Next.js 14](https://img.shields.io/badge/Next.js-14-black?style=flat&logo=nextdotjs)
+
 VIAITALIA is a full-stack platform designed to empower educational agencies and students navigating higher education admissions in Italy.
 
 ## Features Overview
@@ -20,34 +25,23 @@ viaitalia/
 ├── apps/
 │   ├── web/        # Next.js (App Router, Tailwind CSS, TypeScript, Lucide UI)
 │   ├── api/        # NestJS REST API (TypeScript, Prisma, Passport JWT, Swagger)
-│   └── worker/     # NestJS / BullMQ Worker (University Scrapers, Email, PDF rendering)
+│   └── worker/     # NestJS Worker (Italy University Scrapers, Email, PDF rendering)
 ├── packages/
-│   ├── database/   # Prisma Schema, Migrations, Seeders
+│   ├── database/   # Prisma Schema (MongoDB Atlas), Seeders
 │   ├── types/      # Shared DTOs, Enums, Interfaces
 │   └── validation/ # Shared Zod schemas
 ├── docs/           # System Documentation
-├── infra/          # Docker Compose configurations (Postgres, Redis, MinIO)
-└── docker-compose.yml
+└── vercel.json     # Vercel Production Deployment Config
 ```
 
 ## Quick Start (Development)
-
-### Prerequisites
-- Node.js >= 20.x
-- `pnpm` >= 9.x
-- Docker & Docker Compose
 
 ### 1. Environment Setup
 ```bash
 cp .env.example .env
 ```
 
-### 2. Start Infrastructure Services
-```bash
-docker-compose up -d postgres redis minio
-```
-
-### 3. Install Dependencies & Seed Database
+### 2. Install Dependencies & Seed Database
 ```bash
 pnpm install
 pnpm db:generate
@@ -55,14 +49,18 @@ pnpm db:push
 pnpm db:seed
 ```
 
-### 4. Start Applications
+### 3. Start Applications
 ```bash
 pnpm dev
 ```
 
 - **Web (Public, Client & Admin)**: [http://localhost:3000](http://localhost:3000)
 - **API Server & Swagger**: [http://localhost:4000/api/docs](http://localhost:4000/api/docs)
-- **MinIO Storage Console**: [http://localhost:9001](http://localhost:9001)
+
+## Vercel Deployment
+
+Configure `DATABASE_URL` in Vercel Environment Variables:
+`mongodb+srv://ala:ala123@cluster0.tojwjkt.mongodb.net/viaitalia_db?retryWrites=true&w=majority`
 
 ## Documentation
 
