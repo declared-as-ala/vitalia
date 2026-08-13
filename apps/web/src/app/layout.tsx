@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'VIAITALIA - Study & University Applications in Italy',
-  description: 'Production platform for higher education applications, university deadline tracking, dossier management, and visa guidance in Italy.',
+  title: 'ViaItalia | Italian University Application & Admissions Platform',
+  description: 'Official agency platform for study in Italy, pre-enrollment, dossier tracking, and payment receipts.',
 };
 
 export default function RootLayout({
@@ -13,7 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-slate-50 text-slate-900 antialiased">{children}</body>
+      <body className="font-sans antialiased bg-slate-50 text-slate-900">
+        {children}
+      </body>
     </html>
   );
 }
